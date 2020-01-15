@@ -1,0 +1,95 @@
+技术选型 
+	dubbo   rpc                                     
+	noces   注册于发现
+	sentine  服务熔断和降级，降流
+	figen   
+	zull   api网管
+	
+	cloud
+@SuppressWarnings("unchecked")
+告诉编译器忽略 unchecked 警告信息，如使用List，ArrayList等未进行参数化产生的警告信息。
+//尚硅谷
+	lombok实体类插件
+	@Autowired可以加载类的构造器上给参数自动装配。
+	@loadBalanced 加载RestTemplate@Bean方法上开启负载均衡策略。
+	REstTemplate类可以通过url访问别的服务，常用方法参数url,responseType,resultType    
+ 
+ 一大神兽：eureka
+ 1.服务端依赖,依赖的版本号看
+  <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>所管理的版本号
+	依赖：	
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-eureka-server</artifactId>
+	</dependency>
+2.application.yml:
+		server:
+		 port:7001
+		eureka:
+		  instance:
+		    hostname:localhost
+		   client:
+             register-with-eureka: false #表示不向注册中心注册自己
+			 fetch-registry: false #表示自己就是注册中心，我的职责就是维护服务实例，并不需要去检索服务
+			 server-url:
+			   defaultZone: http://${eureka.instance.hostname}:${server.port}/eurek/  #设置Eureka server 交互的地址查询服务和注册服务的地址
+3.在启动类上加上@EnableEurekaServer	，表示开启
+4.eureka的客户端依赖
+	<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-eureka</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-actuator</artifactId>
+	</dependency>
+<dependency>
+		<groupId>org.springframework.cloud</groupId>
+		<artifactId>spring-cloud-starter-config</artifactId>
+	</dependency>
+5.application.yml:
+	eureka:
+		client:#客户端注册进eureka服务列表内
+		  server-url:
+		    defaultZone:http://localhost:7001/eurek
+		instance:
+			instance-id: microservicecloud-dept8001 修改主机名字:"字eureka当中status列的名字"
+			prefer-ip-address: true #访问路径可以显示IP地址
+	info: #连接跳转显示内容
+		app.name: atguigu-microservicecloud
+		company.name: www.wangquanfugui.com
+		build.artifactId: $project.artifactId$  #$$当中的内容来自于maven-resource-plugin的构建
+		bulid.version: $project.version$
+6.在启动类上加上@EnableEurekaClient	，注册到eurekaServer当中
+7。解决url/info，访问问题。：
+	父工程添加
+	<build>
+		<finalName>microservicecloud</finalName>
+		<resource>
+			<directory>src/main/resources</directory>
+			<filtering>true</filtering
+		</resource>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<delimiters>
+						<delimit>$</delimit>
+					</delimiters>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+8.eureka的自我保护:	好死不如赖活着
+	某一时刻某一个微服务不可用了，eureka不会立即清理，依旧会对改微服务的信息进行保存.
+	eurek.server.enable-self-preservation=false 禁用自我保护模式.不建议关闭.
+		
